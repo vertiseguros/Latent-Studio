@@ -5,7 +5,7 @@
     <link rel="stylesheet" type="text/css" href="/style.css"></style>
 </head>
 <body>
-    <iframe src="../example1/" class="fullscreen-iframe"></iframe> <!-- Assign a class to the iframe for styling -->
+    <!-- <iframe src="../example2.2/" class="fullscreen-iframe"></iframe> Assign a class to the iframe for styling -->
     <!-- Search Toolbar at the Top -->
 
     <div class="top-bar">
@@ -31,7 +31,7 @@
 
     <!-- Vertical Input Range Slider on the Left -->
     <div class="slider-container">
-        <input type="range" orient="vertical" class="vertical-slider">
+        <input type="range" orient="vertical" class="vertical-slider" value="0">
     </div>
 
     <div class="bot-ribbon">
@@ -57,7 +57,16 @@
         <img src='assets/07.png' />
         <img src='assets/08.png' />
     </div>
-    
-    <script src="/script.js"></script>
+    <div id="loader"></div>
+    <script type="importmap">
+        {
+            "imports": {
+              "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+              "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/"
+            }
+        }
+      </script>
+    <script type="module" src="/three_script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
