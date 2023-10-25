@@ -1,0 +1,177 @@
+
+/* Add dividers between the images */
+img{
+    transform: scale(0.7); /* Scale the images to 70% */
+}img:not(:last-child) {
+    margin-right: 3px; /* Space between images as dividers */
+}
+
+.selected{
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid white;
+    /* box-shadow: 0px 12px 22px 1px #333; */
+}
+
+body {
+    background-color: rgb(28, 28, 28);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.fullscreen-iframe {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* This will push the iframe to the background */
+    border: none; /* Remove any default borders */
+}
+
+.bot-ribbon, .top-ribbon {
+    position: absolute; /* Layer the ribbons on top of the iframe */
+    width: 100%; /* Take the full width */
+    z-index: 10; /* Make sure it's above the iframe */
+}
+
+.bot-ribbon {
+    display: flex; /* Use flexbox */
+    align-items: flex-end; /* Align images to the bottom */
+    justify-content: center; /* Center the images horizontally */
+    bottom: 0; /* Position the bot-ribbon at the bottom */
+}
+
+.top-ribbon {
+    display: flex; /* Use flexbox */
+    align-items: flex-end; /* Align images to the bottom */
+    justify-content: center; /* Center the images horizontally */
+    top: 40px; 
+}
+
+/* Style for Top Ribbon/Bar */
+.top-bar {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #101010; 
+    display: flex;
+    align-items: center;
+    padding: 0 -20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+}
+
+/* Adjusting flex distribution */
+.top-bar > * {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.brand {
+    position: absolute;
+    left: 20px;
+    font-family: 'Roboto', sans-serif;
+    color: white;
+    justify-content: flex-start;
+}
+
+/* Styles for Search Toolbar */
+.search-toolbar {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    padding: 5px 10px;
+    width: 400px;
+    top: 20;
+    border: 1px solid #cccccc46;
+    background-color: black;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.search-btn {
+    padding: 5px 15px;
+    top: 20;
+    background-color: #333;
+    color: #ffffffaa;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+/* Styles for Download and Upload Buttons */
+.action-buttons {
+    position: absolute;
+    top: 20;
+    right: 10px;
+    z-index: 15;
+    display: flex;
+    gap: 10px;
+}
+
+.download-btn, .upload-btn {
+    padding: 5px 15px;
+    border: none;
+    background-color: #333;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Styles for Vertical Slider */
+.slider-container {
+    position: absolute;
+    left: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 15;
+}
+
+.vertical-slider {
+    /* Suggest me a more updated style webkit in */
+    writing-mode: vertical-lr; /* IE/Edge */
+    appearance: none; /* Resets the default appearance */
+    width: 5px;
+    height: 500px;
+    background-color: rgb(31, 31, 31); /* Track color */
+}
+
+/* Styling the thumb for Webkit browsers (Chrome, Safari) */
+.vertical-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 8px; /* Adjust width of thumb */
+    height: 20px; /* Adjust height of thumb */
+    background-color: white; /* Thumb color */
+    border-radius: 3px; /* Make the thumb edges rounded */
+    cursor: pointer; /* Hand cursor on hover */
+}
+
+/* Styling the thumb for Firefox */
+.vertical-slider::-moz-range-thumb {
+    width: 12px;
+    height: 20px;
+    background-color: white;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+}
+
+/* Resetting the track for Webkit browsers to match the black track */
+.vertical-slider::-webkit-slider-runnable-track {
+    background-color: rgb(30, 30, 30);
+}
