@@ -1,4 +1,3 @@
-
 /* Add dividers between the images */
 img{
     transform: scale(0.7); /* Scale the images to 70% */
@@ -176,4 +175,25 @@ html, body {
 /* Resetting the track for Webkit browsers to match the black track */
 .model-slider::-webkit-slider-runnable-track {
     background: transparent;
+}
+
+.intro-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: system-ui, Arial, sans-serif;
+  font-weight: 700;
+  color: #fff;
+  font-size: clamp(16px, 2.2vw, 30px);
+  line-height: 1.25;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  opacity: 0.9;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.intro-text p {
+  margin: 0.4em 0;
 }

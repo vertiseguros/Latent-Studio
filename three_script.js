@@ -214,3 +214,13 @@ function fitCameraToSelection(camera, controls, selection, fitOffset = 1.2) {
   if (dlBtn) {
     dlBtn.addEventListener('click', () => exportVisibleChildAsOBJ());
   }
+
+// Hide intro overlay on first click anywhere
+const introOverlay = document.querySelector('.intro-overlay');
+if (introOverlay) {
+  const hideIntro = () => {
+    introOverlay.style.display = 'none';
+    document.removeEventListener('click', hideIntro, true);
+  };
+  document.addEventListener('click', hideIntro, true);
+}
