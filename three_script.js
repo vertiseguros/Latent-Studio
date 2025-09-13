@@ -2,15 +2,15 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js'
+import { OBJExporter } from 'three/addons/exporters/OBJExporter.js'
 
 // declare variables to store scene, camera, and renderer
 let scene, camera, renderer
 
-const slider = document.querySelector('.vertical-slider');
-slider.setAttribute("min", 0);
-slider.setAttribute("max", 8); // Since there are 9 meshes, the index will be 0 to 8
+const slider = document.querySelector('.model-slider');
+slider.setAttribute("min", 1);
+slider.setAttribute("max", 9); // Since there are 9 meshes, the index will be 0 to 8
 slider.addEventListener('input', updateMeshVisibility);
-
 
 
 // set up the loader
@@ -21,14 +21,58 @@ const loader = new Rhino3dmLoader()
 loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@7.11.1/' )
 
 let controls; // Declare controls in the global scope
-// load multiple models
-// create an array of model names
-const models = ['model/2_1_Valley_Y_House.3dm']
-for ( let i = 0; i < models.length; i ++ ) {
 
-    load( models[ i ] )
+// Selection indices from ribbons => filename Models/AB.3dm (A = left index, B = right index)
+let selectedLeftIdx = 0;
+let selectedRightIdx = 0;
+let currentModelObject = null; // track currently loaded object for slider control
 
+function buildModelPath() {
+  // A = first digit, B = second digit. Example top=0 bottom=5 -> 05.3dm
+  const a = selectedLeftIdx; // 0-9
+  const b = selectedRightIdx; // 0-9
+  const file = `${a}${b}.3dm`;
+  return `Models/${file}`;
 }
+
+function removePreviousModel() {
+  if (!currentModelObject) return;
+  scene.remove(currentModelObject);
+  currentModelObject = null;
+}
+
+function loadSelectedModel() {
+  // If both indices are the same, show a quick message and skip loading
+  if (selectedLeftIdx === selectedRightIdx) {
+    showMessage('Redundant model combination (same indices)');
+    return;
+  }
+  const path = buildModelPath();
+  removePreviousModel();
+  load(path);
+}
+
+
+// Left ribbon events
+document.querySelectorAll('.left-ribbon img').forEach((img, idx) => {
+  img.addEventListener('click', () => {
+  document.querySelectorAll('.left-ribbon .selected').forEach(el => el.classList.remove('selected'));
+    img.classList.add('selected');
+  selectedLeftIdx = idx;
+    loadSelectedModel();
+  });
+});
+
+// Right ribbon events
+document.querySelectorAll('.right-ribbon img').forEach((img, idx) => {
+  img.addEventListener('click', () => {
+  document.querySelectorAll('.right-ribbon .selected').forEach(el => el.classList.remove('selected'));
+    img.classList.add('selected');
+  selectedRightIdx = idx;
+    loadSelectedModel();
+  });
+});
+
 // call functions
 init()
 
@@ -71,14 +115,20 @@ function init () {
 }
 
 function load(model) {
-    loader.load(model, function(object) {
-        object.name = model; // Set the name of the loaded object
-        scene.add(object);
-
-        // Call fitCameraToSelection after adding the object to the scene.
-        fitCameraToSelection(camera, controls, [object]);
-        updateMeshVisibility();
-    });
+  loader.load(
+    model,
+    function(object) {
+      object.name = model; // Set the name of the loaded object
+      scene.add(object);
+      currentModelObject = object;
+      fitCameraToSelection(camera, controls, [object]);
+      updateMeshVisibility();
+    },
+    undefined,
+    function(err) {
+      console.error(`Failed to load ${model}`, err);
+    }
+  );
 }
 
 // function to continuously render the scene
@@ -121,28 +171,46 @@ function fitCameraToSelection(camera, controls, selection, fitOffset = 1.2) {
   }
 
   function updateMeshVisibility() {
-    // Get the value of the slider
-    const value = parseInt(slider.value || "0", 10); // Default to "0" if no value
+    if (!currentModelObject) return;
+    const value = parseInt(slider.value || '0', 10);
 
-    // Loop through all loaded models
-    for (let model of models) {
-        // Loop through all children of the model
-        scene.traverse(child => {
-            // Assuming the children are all meshes and are direct children of the model
-            if (child instanceof THREE.Mesh) {
-                if (child.parent.name === model) { // This is to ensure that we're only checking direct children of our model
-                    // Hide all meshes
-                    child.visible = false;
-                }
-            }
-        });
-        
-        // Get the model object from the scene by its name
-        const modelObject = scene.getObjectByName(model);
-
-        // Show only the desired mesh
-        if (modelObject && modelObject.children[value]) {
-            modelObject.children[value].visible = true;
-        }
+    // Hide all child meshes
+    currentModelObject.traverse(child => {
+      if (child instanceof THREE.Mesh) child.visible = false;
+    });
+    // Show selected child if exists
+    if (currentModelObject.children[value]) {
+      currentModelObject.children[value].visible = true;
     }
-}
+  }
+
+  function exportVisibleChildAsOBJ() {
+    if (!currentModelObject) { showMessage('No model loaded'); return; }
+
+    let target = null;
+    currentModelObject.traverse(c => { if (!target && c.isMesh && c.visible) target = c; });
+    if (!target) { showMessage('No visible mesh to export'); return; }
+
+    const exporter = new OBJExporter();
+    const objText = exporter.parse(target);
+    const blob = new Blob([objText], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+
+    const baseName = buildModelPath().split('/').pop().replace('.3dm','');
+    const curIdx = parseInt(slider.value || '0', 10);
+    const scaled = (curIdx / 10).toFixed(1); // simple value/10
+
+    a.download = `${baseName}_part_${scaled}.obj`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    showMessage(`OBJ exported (${scaled})`);
+  }
+
+  // Hook download button (export visible child mesh)
+  const dlBtn = document.querySelector('.download-btn');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', () => exportVisibleChildAsOBJ());
+  }
