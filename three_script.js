@@ -1,11 +1,14 @@
 // Import libraries
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { TransformControls } from 'three/addons/controls/TransformControls.js'
 import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js'
 import { OBJExporter } from 'three/addons/exporters/OBJExporter.js'
 
 // declare variables to store scene, camera, and renderer
 let scene, camera, renderer
+let contextModel // persistent background model
+let transformControls
 
 const slider = document.querySelector('.model-slider');
 slider.setAttribute("min", 1);
@@ -26,6 +29,7 @@ let controls; // Declare controls in the global scope
 let selectedLeftIdx = 0;
 let selectedRightIdx = 0;
 let currentModelObject = null; // track currently loaded object for slider control
+let initialCameraSet = false;
 
 function buildModelPath() {
   // A = first digit, B = second digit. Example top=0 bottom=5 -> 05.3dm
@@ -37,6 +41,7 @@ function buildModelPath() {
 
 function removePreviousModel() {
   if (!currentModelObject) return;
+  if(transformControls && transformControls.object===currentModelObject) transformControls.detach();
   scene.remove(currentModelObject);
   currentModelObject = null;
 }
@@ -73,7 +78,25 @@ document.querySelectorAll('.right-ribbon img').forEach((img, idx) => {
   });
 });
 
-// call functions
+// Preload model 45 (left index 4, right index 5) at startup
+// Apply selection classes and load the model before initialization completes
+(() => {
+  const leftImgs = document.querySelectorAll('.left-ribbon img');
+  const rightImgs = document.querySelectorAll('.right-ribbon img');
+
+  // Clear any existing selections just in case
+  document.querySelectorAll('.left-ribbon .selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.right-ribbon .selected').forEach(el => el.classList.remove('selected'));
+  // Set indices
+  selectedLeftIdx = 4;
+  selectedRightIdx = 5;
+  // Visual selection
+  leftImgs[4].classList.add('selected');
+  rightImgs[5].classList.add('selected');
+  // Load corresponding model (45.3dm)
+  load(buildModelPath());
+})();
+
 init()
 
 // hide spinner
@@ -86,9 +109,8 @@ function init () {
     THREE.Object3D.DefaultUp = new THREE.Vector3( 0, 0, 1 )
 
     // create a scene and a camera
-
     scene = new THREE.Scene()
-    scene.background = new THREE.Color(0.03,0.03,0.03)
+    scene.background = new THREE.Color(0.1,0.1,0.1);
     camera = new THREE.PerspectiveCamera( 10, window.innerWidth / window.innerHeight, 0.1, 1000 )
     camera.position.x = -30;
     camera.position.y = -30;
@@ -101,17 +123,41 @@ function init () {
 
     // add some controls to orbit the camera
     controls = new OrbitControls(camera, renderer.domElement);
+  transformControls = new TransformControls(camera, renderer.domElement);
+  transformControls.addEventListener('dragging-changed', e=> controls.enabled = !e.value );
+  scene.add(transformControls);
 
-    // add a directional light
-    const directionalLight = new THREE.DirectionalLight( 0xffffff )
-    directionalLight.intensity = 2
-    directionalLight.position.set(-1, -1, 1);
+  loadContextModel()
 
-    scene.add( directionalLight )
+  const hemi = new THREE.HemisphereLight(0xbfd7ff, 0x3a332c, 2.5);
+  scene.add(hemi);
+  
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(-30, -25, 40);
 
-    const ambientLight = new THREE.AmbientLight();
-    scene.add(ambientLight);
+  key.castShadow = true; // enable later if needed
+  scene.add(key);
 
+}
+
+function loadContextModel(){
+  if(contextModel) return;
+  loader.load('assets/ctxt_model_simple.3dm', o=>{ 
+    contextModel = o; 
+    scene.add(o); 
+    if(!initialCameraSet){
+      const bbox = new THREE.Box3().setFromObject(o);
+      const ctr = bbox.getCenter(new THREE.Vector3());
+      const size = bbox.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x,size.y,size.z);
+      const dist = maxDim * 1.8; // simple framing distance
+      controls.target.copy(ctr);
+      camera.position.set(ctr.x - dist, ctr.y - dist, ctr.z + dist);
+      camera.updateProjectionMatrix();
+      controls.update();
+      initialCameraSet = true;
+    }
+  });
 }
 
 function load(model) {
@@ -121,13 +167,9 @@ function load(model) {
       object.name = model; // Set the name of the loaded object
       scene.add(object);
       currentModelObject = object;
-      fitCameraToSelection(camera, controls, [object]);
+      if(transformControls) transformControls.attach(object);
       updateMeshVisibility();
     },
-    undefined,
-    function(err) {
-      console.error(`Failed to load ${model}`, err);
-    }
   );
 }
 
@@ -224,3 +266,12 @@ if (introOverlay) {
   };
   document.addEventListener('click', hideIntro, true);
 }
+
+// Hotkeys: M=move  S=scale  R=rotate
+window.addEventListener('keydown', e=>{
+  if(!transformControls) return;
+  const k = e.key.toLowerCase();
+  if(k==='m') transformControls.setMode('translate');
+  if(k==='s') transformControls.setMode('scale');
+  if(k==='r') transformControls.setMode('rotate');
+});
