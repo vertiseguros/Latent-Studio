@@ -111,7 +111,7 @@ function init () {
     // create a scene and a camera
     scene = new THREE.Scene()
     scene.background = new THREE.Color(0.1,0.1,0.1);
-    camera = new THREE.PerspectiveCamera( 10, window.innerWidth / window.innerHeight, 0.1, 1000 )
+    camera = new THREE.PerspectiveCamera( 10, window.innerWidth / window.innerHeight, 0.1, 100000 )
     camera.position.x = -30;
     camera.position.y = -30;
     camera.position.z = 30;
@@ -134,8 +134,6 @@ function init () {
   
   const key = new THREE.DirectionalLight(0xffffff, 1.1);
   key.position.set(-30, -25, 40);
-
-  key.castShadow = true; // enable later if needed
   scene.add(key);
 
 }
@@ -275,3 +273,23 @@ window.addEventListener('keydown', e=>{
   if(k==='s') transformControls.setMode('scale');
   if(k==='r') transformControls.setMode('rotate');
 });
+
+// Touch controls: buttons to toggle transform mode
+const touchBar = document.querySelector('.controls-touch');
+if (touchBar) {
+  const buttons = Array.from(touchBar.querySelectorAll('.touch-btn'));
+  const setActive = (mode) => {
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  };
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      if (transformControls) {
+        transformControls.setMode(mode);
+        setActive(mode);
+      }
+    }, { passive: true });
+  });
+  // Default highlight to Move
+  setActive('translate');
+}
