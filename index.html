@@ -11,7 +11,8 @@
 <body>
   <header class="top-bar">
     <a class="brand" href="./" aria-label="Latent Studio home"><span class="brand-mark" aria-hidden="true">l.</span><span>Latent Studio<small>ARCHITECTURAL EXPLORATIONS</small></span></a>
-    <label class="search-toolbar"><span aria-hidden="true">⌕</span><input type="search" class="search-input" placeholder="Find a form…" aria-label="Filter model libraries"><kbd>/</kbd></label>
+    <button class="search-toggle" aria-label="Search forms" aria-expanded="false" aria-controls="model-search">⌕</button>
+    <label id="model-search" class="search-toolbar"><span aria-hidden="true">⌕</span><input type="search" class="search-input" placeholder="Find a form…" aria-label="Filter model libraries"><kbd>/</kbd></label>
     <div class="action-buttons"><button class="upload-btn">+ Context</button><button class="download-btn primary" disabled>Export OBJ ↗</button></div>
     <input type="file" id="context-file" accept=".3dm" hidden>
   </header>

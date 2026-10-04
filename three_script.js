@@ -111,7 +111,8 @@ function fitView() {
   shadowCamera.updateProjectionMatrix();
   const vertical = THREE.MathUtils.degToRad(camera.fov / 2);
   const horizontal = Math.atan(Math.tan(vertical) * camera.aspect);
-  const distance = radius / Math.sin(Math.min(vertical, horizontal)) * 1.7;
+  const fitMargin = window.matchMedia('(max-width: 700px)').matches ? 1.05 : 1.7;
+  const distance = radius / Math.sin(Math.min(vertical, horizontal)) * fitMargin;
   const direction = camera.position.clone().sub(controls.target).normalize();
   controls.target.copy(center);
   camera.position.copy(center).addScaledVector(direction, distance);
@@ -208,6 +209,23 @@ for (const side of ['left', 'right']) {
   });
 }
 slider.addEventListener('input', updateVariant);
+function setSearchOpen(open) {
+  $('.top-bar').classList.toggle('search-open', open);
+  $('.search-toggle').setAttribute('aria-expanded', String(open));
+  if (open) $('.search-input').focus();
+}
+$('.search-toggle').addEventListener('click', () => {
+  setSearchOpen($('.search-toggle').getAttribute('aria-expanded') !== 'true');
+});
+$('.search-input').addEventListener('keydown', event => {
+  if (event.key === 'Escape' || event.key === 'Enter') {
+    setSearchOpen(false);
+    $('.search-toggle').focus();
+  }
+});
+document.addEventListener('pointerdown', event => {
+  if (!event.target.closest('.top-bar')) setSearchOpen(false);
+});
 $('.search-input').addEventListener('input', event => {
   const query = event.target.value.trim().toLowerCase();
   document.querySelectorAll('.model-library').forEach(library => {
@@ -264,7 +282,7 @@ document.querySelectorAll('.touch-btn').forEach(button => button.addEventListene
 window.addEventListener('keydown', event => {
   if (event.target.matches('input, textarea') || event.ctrlKey || event.metaKey || event.altKey || $('.intro-panel').open) return;
   const key = event.key.toLowerCase();
-  if (key === '/') { event.preventDefault(); $('.search-input').focus(); }
+  if (key === '/') { event.preventDefault(); setSearchOpen(true); }
   const modes = { m: 'translate', s: 'scale', r: 'rotate', escape: 'orbit' };
   if (modes[key]) setMode(modes[key]);
 });
