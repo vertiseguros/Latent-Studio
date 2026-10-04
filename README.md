@@ -43,10 +43,11 @@ https://speckle.xyz/streams/61ee3c1a7b
 ## Repository Structure
 ```
 index.html          # Main HTML shell / UI ribbons / overlays
-style.css           # Visual theme, ribbons, glass & blur effects
+style.css           # White clay theme, responsive libraries and controls
 three_script.js     # Scene setup, model loading, transform controls, slider logic
 assets/             # UI images, context model, branding assets
 Models/             # 3DM model files (named AB.3dm by index pair)
+```
 ---
 ## Quick Start (Local)
 No build step required (pure static assets).
@@ -66,3 +67,18 @@ No build step required (pure static assets).
 
 ---
 "Explorer for new architectural dimensions"
+
+## White clay edition
+
+The workspace uses warm whites, restrained stone tones, matte 3D materials and soft directional shadows. Original model assets are preserved. Both model libraries are keyboard-accessible and filter together using the search field.
+
+- Select two different forms; use the slider to explore every mesh in the selected file (including endpoints).
+- Orbit is the default. Use Move (`M`), Scale (`S`) or Rotate (`R`) to transform the study; `Escape` returns to orbit.
+- **Fit view** frames the active study. **Context on/off** controls context visibility.
+- **+ Context** imports a local mesh-based Rhino `.3dm` file into this browser session.
+- **Export OBJ** downloads the active mesh with its world transform.
+- Press `/` to search or `?` in the toolbar for instructions.
+
+No build step or package install is needed. Serve over HTTP; Three.js and Rhino's decoder load from the pinned CDN URLs in the source. A network connection and WebGL support are required.
+
+Validation: Chrome desktop (1440 × 1000) and mobile viewport (390 × 844); model loading, filtering, duplicate-pair feedback, interpolation, OBJ download, instructions and context import. The browser reported no uncaught JavaScript errors during these checks.

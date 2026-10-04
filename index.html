@@ -1,84 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f2ee">
+  <meta name="description" content="Explore architectural possibilities. Blend two MVRDV forms in a quiet, white-clay workspace.">
+  <title>Latent Studio — Architectural explorations</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- <iframe src="../example2.2/" class="fullscreen-iframe"></iframe> Assign a class to the iframe for styling -->
-    <!-- Search Toolbar at the Top -->
-
-    <div class="top-bar">
-        <!-- Website Icon and Title -->
-        <div class="brand">
-            <img src="assets/logo.png" alt="Website Icon" class="website-icon">
-            <span>Latent Studio</span>
-        </div>
-        <div class="search-toolbar">
-            <input type="text" placeholder="Search..." class="search-input"/>
-            <button class="search-btn">Search</button>
-        </div>
-        <div class="action-buttons">
-            <button class="upload-btn">Upload</button>
-            <button class="download-btn">Download</button>
-        </div>
-    </div>
-
-    <div class="intro-overlay">
-        <div class="intro-panel">
-            <div class="intro-text">
-                <h5>Welcome to Latent Studio</h5>
-
-                <p>How it works:</p>
-                <p>1. Upload the context (optional)</p>
-                <p>2. Click two MVRDV models to find a new mix</p>
-                <p>3. Download your preferred mix!</p>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="controls-touch" aria-label="Transform controls">
-        <button class="touch-btn" data-mode="translate" title="Move">Move</button>
-        <button class="touch-btn" data-mode="scale" title="Scale">Scale</button>
-        <button class="touch-btn" data-mode="rotate" title="Rotate">Rotate</button>
-    </div>
-    <div class="slider-container">
-        <input type="range" class="model-slider" value="0">
-    </div>
-
-    <div class="right-ribbon">
-        <div class="ribbon-item"><img src='assets/00.png' alt="Y House" /><span class="ribbon-label">Y House</span></div>
-        <div class="ribbon-item"><img src='assets/01.png' alt="Valley" /><span class="ribbon-label">Valley</span></div>
-        <div class="ribbon-item"><img src='assets/02.png' alt="Depot" /><span class="ribbon-label">Depot</span></div>
-        <div class="ribbon-item"><img src='assets/03.png' alt="Coral Tower" /><span class="ribbon-label">Coral Tower</span></div>
-        <div class="ribbon-item"><img src='assets/04.png' alt="Markthal" /><span class="ribbon-label">Markthal</span></div>
-        <div class="ribbon-item"><img src='assets/05.png' alt="Mirador" /><span class="ribbon-label">Mirador</span></div>
-        <div class="ribbon-item"><img src='assets/06.png' alt="Balancing Barn" /><span class="ribbon-label">Balancing Barn</span></div>
-        <div class="ribbon-item"><img src='assets/07.png' alt="Niew Bergen" /><span class="ribbon-label">Niew Bergen</span></div>
-        <div class="ribbon-item"><img src='assets/08.png' alt="The Couch" /><span class="ribbon-label">The Couch</span></div>
-    </div>
-
-    <div class="left-ribbon">
-        <div class="ribbon-item"><img src='assets/00.png' alt="Y House" /><span class="ribbon-label">Y House</span></div>
-        <div class="ribbon-item"><img src='assets/01.png' alt="Valley" /><span class="ribbon-label">Valley</span></div>
-        <div class="ribbon-item"><img src='assets/02.png' alt="Depot" /><span class="ribbon-label">Depot</span></div>
-        <div class="ribbon-item"><img src='assets/03.png' alt="Coral Tower" /><span class="ribbon-label">Coral Tower</span></div>
-        <div class="ribbon-item"><img src='assets/04.png' alt="Markthal" /><span class="ribbon-label">Markthal</span></div>
-        <div class="ribbon-item"><img src='assets/05.png' alt="Mirador" /><span class="ribbon-label">Mirador</span></div>
-        <div class="ribbon-item"><img src='assets/06.png' alt="Balancing Barn" /><span class="ribbon-label">Balancing Barn</span></div>
-        <div class="ribbon-item"><img src='assets/07.png' alt="Niew Bergen" /><span class="ribbon-label">Niew Bergen</span></div>
-        <div class="ribbon-item"><img src='assets/08.png' alt="The Couch" /><span class="ribbon-label">The Couch</span></div>
-    </div>
-    <div id="loader"></div>
-    <script type="importmap">
-        {
-            "imports": {
-              "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
-              "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/"
-            }
-        }
-      </script>
-    <script type="module" src="three_script.js"></script>
+  <header class="top-bar">
+    <a class="brand" href="./" aria-label="Latent Studio home"><span class="brand-mark" aria-hidden="true">l.</span><span>Latent Studio<small>ARCHITECTURAL EXPLORATIONS</small></span></a>
+    <label class="search-toolbar"><span aria-hidden="true">⌕</span><input type="search" class="search-input" placeholder="Find a form…" aria-label="Filter model libraries"><kbd>/</kbd></label>
+    <div class="action-buttons"><button class="upload-btn">+ Context</button><button class="download-btn primary" disabled>Export OBJ ↗</button></div>
+    <input type="file" id="context-file" accept=".3dm" hidden>
+  </header>
+  <main id="viewport" aria-label="Interactive architectural model viewer">
+    <div class="workspace-caption"><span class="eyebrow">THE SHAPE MIXER / 01</span><h1>Between two forms.</h1><p>A space for architectural possibilities.</p></div>
+    <div class="view-tools"><button class="fit-btn" title="Fit model to view">↗ Fit view</button><button class="context-btn" aria-pressed="true">Context on</button><button class="help-btn" aria-label="Show instructions">?</button></div>
+    <div id="loader" role="status" hidden><span></span>Preparing your study…</div>
+  </main>
+<aside class="model-library left-ribbon" aria-label="FORM A"><div class="library-heading"><span>FORM A</span><span>09</span></div><div class="library-list"><button class="ribbon-item" data-index="0" aria-pressed="false" title="Y House"><img src="assets/00.png" alt=""/><span>Y House</span><small>01</small></button><button class="ribbon-item" data-index="1" aria-pressed="false" title="Valley"><img src="assets/01.png" alt=""/><span>Valley</span><small>02</small></button><button class="ribbon-item" data-index="2" aria-pressed="false" title="Depot"><img src="assets/02.png" alt=""/><span>Depot</span><small>03</small></button><button class="ribbon-item" data-index="3" aria-pressed="false" title="Coral Tower"><img src="assets/03.png" alt=""/><span>Coral Tower</span><small>04</small></button><button class="ribbon-item" data-index="4" aria-pressed="true" title="Markthal"><img src="assets/04.png" alt=""/><span>Markthal</span><small>05</small></button><button class="ribbon-item" data-index="5" aria-pressed="false" title="Mirador"><img src="assets/05.png" alt=""/><span>Mirador</span><small>06</small></button><button class="ribbon-item" data-index="6" aria-pressed="false" title="Balancing Barn"><img src="assets/06.png" alt=""/><span>Balancing Barn</span><small>07</small></button><button class="ribbon-item" data-index="7" aria-pressed="false" title="Nieuw Bergen"><img src="assets/07.png" alt=""/><span>Nieuw Bergen</span><small>08</small></button><button class="ribbon-item" data-index="8" aria-pressed="false" title="The Couch"><img src="assets/08.png" alt=""/><span>The Couch</span><small>09</small></button></div><p class="empty-search" hidden>No matching models</p></aside><aside class="model-library right-ribbon" aria-label="FORM B"><div class="library-heading"><span>FORM B</span><span>09</span></div><div class="library-list"><button class="ribbon-item" data-index="0" aria-pressed="false" title="Y House"><img src="assets/00.png" alt=""/><span>Y House</span><small>01</small></button><button class="ribbon-item" data-index="1" aria-pressed="false" title="Valley"><img src="assets/01.png" alt=""/><span>Valley</span><small>02</small></button><button class="ribbon-item" data-index="2" aria-pressed="false" title="Depot"><img src="assets/02.png" alt=""/><span>Depot</span><small>03</small></button><button class="ribbon-item" data-index="3" aria-pressed="false" title="Coral Tower"><img src="assets/03.png" alt=""/><span>Coral Tower</span><small>04</small></button><button class="ribbon-item" data-index="4" aria-pressed="false" title="Markthal"><img src="assets/04.png" alt=""/><span>Markthal</span><small>05</small></button><button class="ribbon-item" data-index="5" aria-pressed="true" title="Mirador"><img src="assets/05.png" alt=""/><span>Mirador</span><small>06</small></button><button class="ribbon-item" data-index="6" aria-pressed="false" title="Balancing Barn"><img src="assets/06.png" alt=""/><span>Balancing Barn</span><small>07</small></button><button class="ribbon-item" data-index="7" aria-pressed="false" title="Nieuw Bergen"><img src="assets/07.png" alt=""/><span>Nieuw Bergen</span><small>08</small></button><button class="ribbon-item" data-index="8" aria-pressed="false" title="The Couch"><img src="assets/08.png" alt=""/><span>The Couch</span><small>09</small></button></div><p class="empty-search" hidden>No matching models</p></aside>
+  <section class="mix-panel" aria-label="Model blending controls">
+    <div class="mix-heading"><span class="eyebrow">INTERPOLATION</span><output id="mix-value" for="model-slider">01 / 09</output></div>
+    <div class="mix-labels"><span id="form-a">Markthal</span><span id="form-b">Mirador</span></div>
+    <input id="model-slider" type="range" class="model-slider" min="1" max="9" value="6" aria-label="Interpolation step" disabled>
+    <div class="mix-footer"><span>Explore the in-between</span><div class="controls-touch" aria-label="Transform controls"><button class="touch-btn active" data-mode="orbit" aria-pressed="true">Orbit</button><button class="touch-btn" data-mode="translate" aria-pressed="false">Move</button><button class="touch-btn" data-mode="scale" aria-pressed="false">Scale</button><button class="touch-btn" data-mode="rotate" aria-pressed="false">Rotate</button></div></div>
+  </section>
+  <footer class="status-bar"><span><i></i> WHITE CLAY STUDIO</span><span class="gesture-hint">Drag to orbit · Scroll to zoom</span><span>IAAC · MaCAD 22/23</span></footer>
+  <div id="message" role="status" aria-live="polite" hidden></div>
+  <dialog class="intro-panel"><button class="close-intro" aria-label="Close instructions">×</button><span class="eyebrow">LATENT STUDIO</span><h2>New forms.<br>Quiet possibilities.</h2><p>Explore the space between familiar architectures.</p><ol><li>Choose a different form from each library.</li><li>Move the slider to discover intermediate shapes.</li><li>Add a Rhino context and export your study as OBJ.</li></ol><button class="start-btn primary">Start exploring ↗</button><small>A thesis exploration by Alberto Carro Novo · IAAC MaCAD</small></dialog>
+  <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.147.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.147.0/examples/jsm/"}}</script>
+  <script type="module" src="three_script.js"></script>
 </body>
 </html>

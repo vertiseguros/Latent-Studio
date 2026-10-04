@@ -1,295 +1,274 @@
-// Import libraries
-import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { TransformControls } from 'three/addons/controls/TransformControls.js'
-import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js'
-import { OBJExporter } from 'three/addons/exporters/OBJExporter.js'
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';
+import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
 
-// declare variables to store scene, camera, and renderer
-let scene, camera, renderer
-let contextModel // persistent background model
-let transformControls
+const $ = selector => document.querySelector(selector);
+const viewport = $('#viewport');
+const slider = $('.model-slider');
+const names = ['Y House', 'Valley', 'Depot', 'Coral Tower', 'Markthal', 'Mirador', 'Balancing Barn', 'Nieuw Bergen', 'The Couch'];
+let selectedLeft = 4, selectedRight = 5, currentModel, contextModel;
+let requestId = 0, contextRequestId = 0, messageTimer, mode = 'orbit';
+let variants = [];
+THREE.Object3D.DefaultUp.set(0, 0, 1);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f3f2ee');
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100000);
+camera.position.set(-300, -400, 280);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.95;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.setAttribute('aria-label', 'White clay architectural study. Drag to orbit and scroll to zoom.');
+viewport.appendChild(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+const transform = new TransformControls(camera, renderer.domElement);
+transform.setSize(0.75);
+transform.addEventListener('dragging-changed', event => { controls.enabled = !event.value; });
+scene.add(transform);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb3b0a6, 0.65));
+const key = new THREE.DirectionalLight(0xfffaf2, 1.7);
+key.position.set(-300, -200, 500);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.bias = -0.0002;
+key.shadow.normalBias = 0.15;
+scene.add(key, key.target);
+const fill = new THREE.DirectionalLight(0xffffff, 0.55);
+fill.position.set(300, 150, 100);
+scene.add(fill);
+const clay = new THREE.MeshStandardMaterial({ color: '#c9c4b9', roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+const contextClay = new THREE.MeshStandardMaterial({ color: '#e7e5df', roughness: 1, metalness: 0, side: THREE.DoubleSide });
+const loader = new Rhino3dmLoader();
+loader.setLibraryPath('https://cdn.jsdelivr.net/npm/rhino3dm@7.11.1/');
+loader.setWorkerLimit(2);
 
-const slider = document.querySelector('.model-slider');
-slider.setAttribute("min", 1);
-slider.setAttribute("max", 9); // Since there are 9 meshes, the index will be 0 to 8
-slider.addEventListener('input', updateMeshVisibility);
-
-
-// set up the loader
-const size = new THREE.Vector3();
-const center = new THREE.Vector3();
-const box = new THREE.Box3();
-const loader = new Rhino3dmLoader()
-loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@7.11.1/' )
-
-let controls; // Declare controls in the global scope
-
-// Selection indices from ribbons => filename Models/AB.3dm (A = left index, B = right index)
-let selectedLeftIdx = 0;
-let selectedRightIdx = 0;
-let currentModelObject = null; // track currently loaded object for slider control
-let initialCameraSet = false;
-
-function buildModelPath() {
-  // A = first digit, B = second digit. Example top=0 bottom=5 -> 05.3dm
-  const a = selectedLeftIdx; // 0-9
-  const b = selectedRightIdx; // 0-9
-  const file = `${a}${b}.3dm`;
-  return `Models/${file}`;
+function showMessage(text) {
+  clearTimeout(messageTimer);
+  $('#message').textContent = text;
+  $('#message').hidden = false;
+  messageTimer = setTimeout(() => { $('#message').hidden = true; }, 5000);
 }
-
-function removePreviousModel() {
-  if (!currentModelObject) return;
-  if(transformControls && transformControls.object===currentModelObject) transformControls.detach();
-  scene.remove(currentModelObject);
-  currentModelObject = null;
-}
-
-function loadSelectedModel() {
-  // If both indices are the same, show a quick message and skip loading
-  if (selectedLeftIdx === selectedRightIdx) {
-    showMessage('Redundant model combination (same indices)');
-    return;
-  }
-  const path = buildModelPath();
-  removePreviousModel();
-  load(path);
-}
-
-
-// Left ribbon events
-document.querySelectorAll('.left-ribbon img').forEach((img, idx) => {
-  img.addEventListener('click', () => {
-  document.querySelectorAll('.left-ribbon .selected').forEach(el => el.classList.remove('selected'));
-    img.classList.add('selected');
-  selectedLeftIdx = idx;
-    loadSelectedModel();
-  });
-});
-
-// Right ribbon events
-document.querySelectorAll('.right-ribbon img').forEach((img, idx) => {
-  img.addEventListener('click', () => {
-  document.querySelectorAll('.right-ribbon .selected').forEach(el => el.classList.remove('selected'));
-    img.classList.add('selected');
-  selectedRightIdx = idx;
-    loadSelectedModel();
-  });
-});
-
-// Preload model 45 (left index 4, right index 5) at startup
-// Apply selection classes and load the model before initialization completes
-(() => {
-  const leftImgs = document.querySelectorAll('.left-ribbon img');
-  const rightImgs = document.querySelectorAll('.right-ribbon img');
-
-  // Clear any existing selections just in case
-  document.querySelectorAll('.left-ribbon .selected').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.right-ribbon .selected').forEach(el => el.classList.remove('selected'));
-  // Set indices
-  selectedLeftIdx = 4;
-  selectedRightIdx = 5;
-  // Visual selection
-  leftImgs[4].classList.add('selected');
-  rightImgs[5].classList.add('selected');
-  // Load corresponding model (45.3dm)
-  load(buildModelPath());
-})();
-
-init()
-
-// hide spinner
-animate()
-
-// function to setup the scene, camera, renderer, and load 3d model
-function init () {
-
-    // Rhino models are z-up, so set this as the default
-    THREE.Object3D.DefaultUp = new THREE.Vector3( 0, 0, 1 )
-
-    // create a scene and a camera
-    scene = new THREE.Scene()
-    scene.background = new THREE.Color(0.1,0.1,0.1);
-    camera = new THREE.PerspectiveCamera( 10, window.innerWidth / window.innerHeight, 0.1, 100000 )
-    camera.position.x = -30;
-    camera.position.y = -30;
-    camera.position.z = 30;
-
-    // create the renderer and add it to the html
-    renderer = new THREE.WebGLRenderer( { antialias: true, preserveDrawingBuffer: true } )
-    renderer.setSize( window.innerWidth, window.innerHeight )
-    document.body.appendChild( renderer.domElement )
-
-    // add some controls to orbit the camera
-    controls = new OrbitControls(camera, renderer.domElement);
-  transformControls = new TransformControls(camera, renderer.domElement);
-  transformControls.addEventListener('dragging-changed', e=> controls.enabled = !e.value );
-  scene.add(transformControls);
-
-  loadContextModel()
-
-  const hemi = new THREE.HemisphereLight(0xbfd7ff, 0x3a332c, 2.5);
-  scene.add(hemi);
-  
-  const key = new THREE.DirectionalLight(0xffffff, 1.1);
-  key.position.set(-30, -25, 40);
-  scene.add(key);
-
-}
-
-function loadContextModel(){
-  if(contextModel) return;
-  loader.load('assets/ctxt_model_simple.3dm', o=>{ 
-    contextModel = o; 
-    scene.add(o); 
-    if(!initialCameraSet){
-      const bbox = new THREE.Box3().setFromObject(o);
-      const ctr = bbox.getCenter(new THREE.Vector3());
-      const size = bbox.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x,size.y,size.z);
-      const dist = maxDim * 1.8; // simple framing distance
-      controls.target.copy(ctr);
-      camera.position.set(ctr.x - dist, ctr.y - dist, ctr.z + dist);
-      camera.updateProjectionMatrix();
-      controls.update();
-      initialCameraSet = true;
-    }
-  });
-}
-
-function load(model) {
-  loader.load(
-    model,
-    function(object) {
-      object.name = model; // Set the name of the loaded object
-      scene.add(object);
-      currentModelObject = object;
-      if(transformControls) transformControls.attach(object);
-      updateMeshVisibility();
-    },
-  );
-}
-
-// function to continuously render the scene
-function animate() {
-
-    requestAnimationFrame( animate )
-    renderer.render( scene, camera )
-
-}
-
-function fitCameraToSelection(camera, controls, selection, fitOffset = 1.2) {
-    box.makeEmpty();
-    for(const object of selection) {
-      box.expandByObject(object);
-    }
-    
-    box.getSize(size);
-    box.getCenter(center );
-    
-    const maxSize = Math.max(size.x, size.y, size.z);
-    const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * camera.fov / 360));
-    const fitWidthDistance = fitHeightDistance / camera.aspect;
-    const distance = fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-    
-    const direction = controls.target.clone()
-      .sub(camera.position)
-      .normalize()
-      .multiplyScalar(distance);
-  
-    controls.maxDistance = distance * 10;
-    controls.target.copy(center);
-    
-    camera.near = distance / 100;
-    camera.far = distance * 100;
-    camera.updateProjectionMatrix();
-  
-    camera.position.copy(controls.target).sub(direction);
-    
-    controls.update();
-  }
-
-  function updateMeshVisibility() {
-    if (!currentModelObject) return;
-    const value = parseInt(slider.value || '0', 10);
-
-    // Hide all child meshes
-    currentModelObject.traverse(child => {
-      if (child instanceof THREE.Mesh) child.visible = false;
+function disposeObject(object) {
+  if (!object) return;
+  object.traverse(child => {
+    child.geometry?.dispose();
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    materials.forEach(material => {
+      if (!material || material === clay || material === contextClay) return;
+      Object.values(material).forEach(value => { if (value?.isTexture) value.dispose(); });
+      material.dispose();
     });
-    // Show selected child if exists
-    if (currentModelObject.children[value]) {
-      currentModelObject.children[value].visible = true;
-    }
-  }
-
-  function exportVisibleChildAsOBJ() {
-    if (!currentModelObject) { showMessage('No model loaded'); return; }
-
-    let target = null;
-    currentModelObject.traverse(c => { if (!target && c.isMesh && c.visible) target = c; });
-    if (!target) { showMessage('No visible mesh to export'); return; }
-
-    const exporter = new OBJExporter();
-    const objText = exporter.parse(target);
-    const blob = new Blob([objText], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-
-    const baseName = buildModelPath().split('/').pop().replace('.3dm','');
-    const curIdx = parseInt(slider.value || '0', 10);
-    const scaled = (curIdx / 10).toFixed(1); // simple value/10
-
-    a.download = `${baseName}_part_${scaled}.obj`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-    showMessage(`OBJ exported (${scaled})`);
-  }
-
-  // Hook download button (export visible child mesh)
-  const dlBtn = document.querySelector('.download-btn');
-  if (dlBtn) {
-    dlBtn.addEventListener('click', () => exportVisibleChildAsOBJ());
-  }
-
-// Hide intro overlay on first click anywhere
-const introOverlay = document.querySelector('.intro-overlay');
-if (introOverlay) {
-  const hideIntro = () => {
-    introOverlay.style.display = 'none';
-    document.removeEventListener('click', hideIntro, true);
-  };
-  document.addEventListener('click', hideIntro, true);
-}
-
-// Hotkeys: M=move  S=scale  R=rotate
-window.addEventListener('keydown', e=>{
-  if(!transformControls) return;
-  const k = e.key.toLowerCase();
-  if(k==='m') transformControls.setMode('translate');
-  if(k==='s') transformControls.setMode('scale');
-  if(k==='r') transformControls.setMode('rotate');
-});
-
-// Touch controls: buttons to toggle transform mode
-const touchBar = document.querySelector('.controls-touch');
-if (touchBar) {
-  const buttons = Array.from(touchBar.querySelectorAll('.touch-btn'));
-  const setActive = (mode) => {
-    buttons.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  };
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.mode;
-      if (transformControls) {
-        transformControls.setMode(mode);
-        setActive(mode);
-      }
-    }, { passive: true });
   });
-  // Default highlight to Move
-  setActive('translate');
 }
+function applyClay(object, material) {
+  object.traverse(child => {
+    if (child.isMesh) {
+      const old = Array.isArray(child.material) ? child.material : [child.material];
+      old.forEach(item => {
+        if (!item) return;
+        Object.values(item).forEach(value => { if (value?.isTexture) value.dispose(); });
+        item.dispose();
+      });
+      child.material = material;
+      child.castShadow = true;
+      child.receiveShadow = true;
+    } else if (child.isLine || child.isPoints) child.visible = false;
+  });
+}
+function resize() {
+  const width = viewport.clientWidth, height = viewport.clientHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+new ResizeObserver(resize).observe(viewport);
+resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+
+function fitView() {
+  if (!currentModel) return;
+  currentModel.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  currentModel.traverse(child => { if (child.isMesh && child.visible) box.expandByObject(child); });
+  if (box.isEmpty()) return;
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const radius = Math.max(size.length() / 2, 1);
+  key.position.copy(center).add(new THREE.Vector3(-radius * 2, -radius, radius * 4));
+  key.target.position.copy(center);
+  const shadowCamera = key.shadow.camera;
+  shadowCamera.left = shadowCamera.bottom = -radius * 3;
+  shadowCamera.right = shadowCamera.top = radius * 3;
+  shadowCamera.near = 0.1;
+  shadowCamera.far = radius * 12;
+  shadowCamera.updateProjectionMatrix();
+  const vertical = THREE.MathUtils.degToRad(camera.fov / 2);
+  const horizontal = Math.atan(Math.tan(vertical) * camera.aspect);
+  const distance = radius / Math.sin(Math.min(vertical, horizontal)) * 1.7;
+  const direction = camera.position.clone().sub(controls.target).normalize();
+  controls.target.copy(center);
+  camera.position.copy(center).addScaledVector(direction, distance);
+  camera.near = Math.max(distance / 1000, 0.01);
+  camera.far = distance * 100;
+  camera.updateProjectionMatrix();
+  controls.maxDistance = distance * 10;
+  controls.update();
+}
+function setMode(next) {
+  mode = next;
+  transform.detach();
+  if (mode !== 'orbit' && currentModel) {
+    transform.setMode(mode);
+    transform.attach(currentModel);
+  }
+  document.querySelectorAll('.touch-btn').forEach(button => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+function updateVariant() {
+  const index = Number(slider.value) - 1;
+  variants.forEach((mesh, i) => { mesh.visible = i === index; });
+  $('#mix-value').textContent = `${String(index + 1).padStart(2, '0')} / ${String(variants.length).padStart(2, '0')}`;
+  slider.setAttribute('aria-valuetext', `Study ${index + 1} of ${variants.length}`);
+}
+function updateSelection() {
+  ['left', 'right'].forEach((side, i) => {
+    document.querySelectorAll(`.${side}-ribbon .ribbon-item`).forEach(button => {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.index) === (i ? selectedRight : selectedLeft)));
+    });
+  });
+  $('#form-a').textContent = names[selectedLeft];
+  $('#form-b').textContent = names[selectedRight];
+}
+function loadPair(left, right) {
+  if (left === right) { showMessage('Choose two different forms to explore a mix.'); return; }
+  const id = ++requestId;
+  $('#loader').hidden = false;
+  slider.disabled = true;
+  $('.download-btn').disabled = true;
+  loader.load(`Models/${left}${right}.3dm`, object => {
+    if (id !== requestId) { disposeObject(object); return; }
+    const meshes = [];
+    object.traverse(child => { if (child.isMesh) meshes.push(child); });
+    if (!meshes.length) { disposeObject(object); finishLoad('This study contains no meshes.'); return; }
+    transform.detach();
+    if (currentModel) { scene.remove(currentModel); disposeObject(currentModel); }
+    applyClay(object, clay);
+    currentModel = object;
+    currentModel.name = `${left}${right}`;
+    scene.add(object);
+    selectedLeft = left;
+    selectedRight = right;
+    variants = meshes;
+    slider.max = variants.length;
+    slider.value = Math.min(Number(slider.value), variants.length);
+    updateSelection();
+    updateVariant();
+    setMode(mode);
+    fitView();
+    finishLoad();
+  }, undefined, () => {
+    if (id === requestId) finishLoad('Could not load this mix. Check your connection and try again.');
+  });
+}
+function finishLoad(error) {
+  $('#loader').hidden = true;
+  slider.disabled = !currentModel;
+  $('.download-btn').disabled = !currentModel;
+  if (error) showMessage(error);
+}
+function replaceContext(object) {
+  applyClay(object, contextClay);
+  if (contextModel) { scene.remove(contextModel); disposeObject(contextModel); }
+  contextModel = object;
+  contextModel.visible = $('.context-btn').getAttribute('aria-pressed') === 'true';
+  scene.add(object);
+}
+const defaultContextRequest = contextRequestId;
+loader.load('assets/ctxt_model_simple.3dm', object => {
+  if (defaultContextRequest !== contextRequestId) { disposeObject(object); return; }
+  replaceContext(object);
+}, undefined, () => { if (!contextRequestId) showMessage('The context could not load. You can still explore the forms.'); });
+
+for (const side of ['left', 'right']) {
+  document.querySelectorAll(`.${side}-ribbon .ribbon-item`).forEach(button => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index);
+      loadPair(side === 'left' ? index : selectedLeft, side === 'right' ? index : selectedRight);
+    });
+  });
+}
+slider.addEventListener('input', updateVariant);
+$('.search-input').addEventListener('input', event => {
+  const query = event.target.value.trim().toLowerCase();
+  document.querySelectorAll('.model-library').forEach(library => {
+    let count = 0;
+    library.querySelectorAll('.ribbon-item').forEach(button => {
+      button.hidden = !names[Number(button.dataset.index)].toLowerCase().includes(query);
+      if (!button.hidden) count++;
+    });
+    library.querySelector('.empty-search').hidden = count > 0;
+  });
+});
+$('.fit-btn').addEventListener('click', fitView);
+$('.context-btn').addEventListener('click', () => {
+  const visible = $('.context-btn').getAttribute('aria-pressed') !== 'true';
+  $('.context-btn').setAttribute('aria-pressed', String(visible));
+  $('.context-btn').textContent = visible ? 'Context on' : 'Context off';
+  if (contextModel) contextModel.visible = visible;
+});
+$('.upload-btn').addEventListener('click', () => $('#context-file').click());
+$('#context-file').addEventListener('change', async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.3dm')) { showMessage('Choose a Rhino .3dm file.'); return; }
+  const id = ++contextRequestId;
+  $('.upload-btn').disabled = true;
+  $('.upload-btn').textContent = 'Importing…';
+  try {
+    const buffer = await file.arrayBuffer();
+    const object = await new Promise((resolve, reject) => loader.parse(buffer, resolve, reject));
+    if (id !== contextRequestId) { disposeObject(object); return; }
+    replaceContext(object);
+    showMessage(`Context imported: ${file.name}`);
+  } catch { showMessage('Could not read this Rhino file. Try a mesh-based .3dm file.'); }
+  finally {
+    $('.upload-btn').disabled = false;
+    $('.upload-btn').textContent = '+ Context';
+    event.target.value = '';
+  }
+});
+$('.download-btn').addEventListener('click', () => {
+  const mesh = variants[Number(slider.value) - 1];
+  if (!mesh) return;
+  currentModel.updateMatrixWorld(true);
+  const text = new OBJExporter().parse(mesh);
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `latent-${currentModel.name}-study-${slider.value}.obj`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  showMessage('Your architectural study has been exported.');
+});
+document.querySelectorAll('.touch-btn').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
+window.addEventListener('keydown', event => {
+  if (event.target.matches('input, textarea') || event.ctrlKey || event.metaKey || event.altKey || $('.intro-panel').open) return;
+  const key = event.key.toLowerCase();
+  if (key === '/') { event.preventDefault(); $('.search-input').focus(); }
+  const modes = { m: 'translate', s: 'scale', r: 'rotate', escape: 'orbit' };
+  if (modes[key]) setMode(modes[key]);
+});
+$('.help-btn').addEventListener('click', () => $('.intro-panel').showModal());
+$('.close-intro').addEventListener('click', () => $('.intro-panel').close());
+$('.start-btn').addEventListener('click', () => $('.intro-panel').close());
+loadPair(4, 5);
