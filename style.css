@@ -426,7 +426,10 @@ h1 {
   background:var(--surface);
   color:var(--ink);
   border-radius:24px;
-  max-width:480px;
+  max-width:560px;
+  max-height:calc(100dvh - 32px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
   width:calc(100% - 40px);
   padding:42px;
   box-shadow:0 28px 100px #34363225;
@@ -583,4 +586,22 @@ h1 {
     animation:none!important;
     transition:none!important;
   }
+}
+
+/* Project information stays inside the optional, scrollable info dialog. */
+.intro-panel .intro-lead { color:var(--ink); font-size:15px; line-height:1.5; }
+.intro-panel h2 { margin-bottom:12px; }
+.project-credits { border-top:1px solid var(--line); margin-top:22px; padding-top:18px; }
+.project-credits h3 { font-size:12px; font-weight:600; margin:0 0 14px; }
+.project-credits dl { margin:0; font-size:12px; line-height:1.6; }
+.project-credits dl>div { display:grid; grid-template-columns:92px 1fr; gap:12px; margin-bottom:8px; }
+.project-credits dt { color:var(--muted); }
+.project-credits dd { margin:0; }
+.research-link { display:inline-block; font-size:12px; text-decoration:underline; text-underline-offset:4px; padding:8px 0; }
+.intro-instructions { border-top:1px solid var(--line); margin:18px 0; padding-top:8px; }
+.intro-instructions summary { cursor:pointer; padding:10px 0; font-size:12px; }
+.intro-instructions ol { margin:8px 0 12px; }
+.intro-panel .close-intro { position:sticky; float:right; top:0; right:auto; margin:-16px -16px 0 8px; background:var(--surface); min-width:40px; min-height:40px; }
+@media(max-width:360px) {
+  .project-credits dl>div { grid-template-columns:1fr; gap:2px; }
 }

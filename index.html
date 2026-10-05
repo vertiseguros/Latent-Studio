@@ -18,7 +18,7 @@
   </header>
   <main id="viewport" aria-label="Interactive architectural model viewer">
     <div class="workspace-caption"><span class="eyebrow">THE SHAPE MIXER / 01</span><h1>Between two forms.</h1><p>A space for architectural possibilities.</p></div>
-    <div class="view-tools"><button class="fit-btn" title="Fit model to view">↗ Fit view</button><button class="context-btn" aria-pressed="true">Context on</button><button class="help-btn" aria-label="Show instructions">?</button></div>
+    <div class="view-tools"><button class="fit-btn" title="Fit model to view">↗ Fit view</button><button class="context-btn" aria-pressed="true">Context on</button><button class="help-btn" aria-label="About Latent Studio" title="About the project">i</button></div>
     <div id="loader" role="status" hidden><span></span>Preparing your study…</div>
   </main>
 <aside class="model-library left-ribbon" aria-label="FORM A"><div class="library-heading"><span>FORM A</span><span>09</span></div><div class="library-list"><button class="ribbon-item" data-index="0" aria-pressed="false" title="Y House"><img src="assets/00.png" alt=""/><span>Y House</span><small>01</small></button><button class="ribbon-item" data-index="1" aria-pressed="false" title="Valley"><img src="assets/01.png" alt=""/><span>Valley</span><small>02</small></button><button class="ribbon-item" data-index="2" aria-pressed="false" title="Depot"><img src="assets/02.png" alt=""/><span>Depot</span><small>03</small></button><button class="ribbon-item" data-index="3" aria-pressed="false" title="Coral Tower"><img src="assets/03.png" alt=""/><span>Coral Tower</span><small>04</small></button><button class="ribbon-item" data-index="4" aria-pressed="true" title="Markthal"><img src="assets/04.png" alt=""/><span>Markthal</span><small>05</small></button><button class="ribbon-item" data-index="5" aria-pressed="false" title="Mirador"><img src="assets/05.png" alt=""/><span>Mirador</span><small>06</small></button><button class="ribbon-item" data-index="6" aria-pressed="false" title="Balancing Barn"><img src="assets/06.png" alt=""/><span>Balancing Barn</span><small>07</small></button><button class="ribbon-item" data-index="7" aria-pressed="false" title="Nieuw Bergen"><img src="assets/07.png" alt=""/><span>Nieuw Bergen</span><small>08</small></button><button class="ribbon-item" data-index="8" aria-pressed="false" title="The Couch"><img src="assets/08.png" alt=""/><span>The Couch</span><small>09</small></button></div><p class="empty-search" hidden>No matching models</p></aside><aside class="model-library right-ribbon" aria-label="FORM B"><div class="library-heading"><span>FORM B</span><span>09</span></div><div class="library-list"><button class="ribbon-item" data-index="0" aria-pressed="false" title="Y House"><img src="assets/00.png" alt=""/><span>Y House</span><small>01</small></button><button class="ribbon-item" data-index="1" aria-pressed="false" title="Valley"><img src="assets/01.png" alt=""/><span>Valley</span><small>02</small></button><button class="ribbon-item" data-index="2" aria-pressed="false" title="Depot"><img src="assets/02.png" alt=""/><span>Depot</span><small>03</small></button><button class="ribbon-item" data-index="3" aria-pressed="false" title="Coral Tower"><img src="assets/03.png" alt=""/><span>Coral Tower</span><small>04</small></button><button class="ribbon-item" data-index="4" aria-pressed="false" title="Markthal"><img src="assets/04.png" alt=""/><span>Markthal</span><small>05</small></button><button class="ribbon-item" data-index="5" aria-pressed="true" title="Mirador"><img src="assets/05.png" alt=""/><span>Mirador</span><small>06</small></button><button class="ribbon-item" data-index="6" aria-pressed="false" title="Balancing Barn"><img src="assets/06.png" alt=""/><span>Balancing Barn</span><small>07</small></button><button class="ribbon-item" data-index="7" aria-pressed="false" title="Nieuw Bergen"><img src="assets/07.png" alt=""/><span>Nieuw Bergen</span><small>08</small></button><button class="ribbon-item" data-index="8" aria-pressed="false" title="The Couch"><img src="assets/08.png" alt=""/><span>The Couch</span><small>09</small></button></div><p class="empty-search" hidden>No matching models</p></aside>
@@ -30,7 +30,26 @@
   </section>
   <footer class="status-bar"><span><i></i> WHITE CLAY STUDIO</span><span class="gesture-hint">Drag to orbit · Scroll to zoom</span><span>IAAC · MaCAD 22/23</span></footer>
   <div id="message" role="status" aria-live="polite" hidden></div>
-  <dialog class="intro-panel"><button class="close-intro" aria-label="Close instructions">×</button><span class="eyebrow">LATENT STUDIO</span><h2>New forms.<br>Quiet possibilities.</h2><p>Explore the space between familiar architectures.</p><ol><li>Choose a different form from each library.</li><li>Move the slider to discover intermediate shapes.</li><li>Add a Rhino context and export your study as OBJ.</li></ol><button class="start-btn primary">Start exploring ↗</button><small>A thesis exploration by Alberto Carro Novo · IAAC MaCAD</small></dialog>
+  <dialog class="intro-panel" aria-labelledby="about-title">
+    <button class="close-intro" aria-label="Close project information" autofocus>×</button>
+    <span class="eyebrow">ABOUT THE PROJECT · MaCAD 2022–2023</span>
+    <h2 id="about-title">Latent Studio</h2>
+    <p class="intro-lead">Exploring new architectural possibilities through AI.</p>
+    <p>A thesis project investigating how 3D generative adversarial networks (3DGANs) can support early architectural design. Trained on voxelized architectural massings, the research explores the intermediate forms hidden within a model’s latent space.</p>
+    <p>This shape mixer lets you explore a collection of pre-generated studies by choosing two architectures and moving between their forms.</p>
+    <section class="project-credits" aria-label="Project credits">
+      <h3>Research &amp; acknowledgements</h3>
+      <dl>
+        <div><dt>Author</dt><dd>Alberto Carro Novo</dd></div>
+        <div><dt>Programme</dt><dd>IAAC · Master in Advanced Computation for Architecture and Design (MaCAD), 2022–2023</dd></div>
+        <div><dt>Thesis advisor</dt><dd>Oana Taut</dd></div>
+      </dl>
+      <p>Special thanks to MVRDV for the architectural model collection used in this exploration.</p>
+      <a class="research-link" href="https://blog.iaac.net/latent-studio/" target="_blank" rel="noopener noreferrer">Read the project on IAAC Blog ↗</a>
+    </section>
+    <details class="intro-instructions"><summary>How to use the shape mixer</summary><ol><li>Choose a different form from each library.</li><li>Move the slider to discover intermediate shapes.</li><li>Add a Rhino context and export your study as OBJ.</li></ol></details>
+    <button class="start-btn primary">Explore the studio ↗</button>
+  </dialog>
   <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.147.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.147.0/examples/jsm/"}}</script>
   <script type="module" src="three_script.js"></script>
 </body>
